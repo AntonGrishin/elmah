@@ -1,3 +1,2 @@
-#include "elmah.hpp"
+// #include "elmah_core.hpp"
 #include "Exception.hpp"
-
