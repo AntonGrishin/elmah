@@ -45,6 +45,9 @@ private:
     template<unsigned size, typename T>
     void SolveProblem(const ProblemName& problem, T* cell_factory);
 
+    template<typename T>
+    void SolveElMech(T* cell_factory);
+
     void SetDuration(double duration);
 
     template<unsigned DIM>

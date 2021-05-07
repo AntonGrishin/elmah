@@ -1,6 +1,8 @@
 #include "elmah_core_chaste.hpp"
 #include "elmah_core_factory.hpp"
 #include "PetscTools.hpp"
+#include "PlaneStimulusCellFactory.hpp"
+#include "NonlinearElasticityTools.hpp"
 
 ElmahCoreChaste::ElmahCoreChaste()
 {
@@ -39,32 +41,132 @@ void ElmahCoreChaste::StartSimulation(const T& simConfig)
     }
 
 
-    if(simConfig.dim == Dimension::dim2D)
+    if(simConfig.prName == ProblemName::ELECTRO_MECHA)
     {
         boost::shared_ptr<AbstractIvpOdeSolver> solver = CreateSolver(simConfig.sName);
         AbstractCellFactory2D cell_factory(simConfig.CMName, solver);
-        SolveProblem<2>(simConfig.prName, &cell_factory);
+        SolveElMech(&cell_factory);
     }
     else
     {
-        if(simConfig.sName == SolverName::BackwardEuler)
+        if(simConfig.dim == Dimension::dim2D)
         {
-            CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 20);
-            AbstractCellFactory3D cell_factory(cmname);
-            SolveProblem<3>(simConfig.prName, &cell_factory);
+            boost::shared_ptr<AbstractIvpOdeSolver> solver = CreateSolver(simConfig.sName);
+            AbstractCellFactory2D cell_factory(simConfig.CMName, solver);
+            SolveProblem<2>(simConfig.prName, &cell_factory);
         }
         else
         {
-            CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 10);
+            if(simConfig.sName == SolverName::BackwardEuler)
+            {
+                CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 20);
+                AbstractCellFactory3D cell_factory(cmname);
+                SolveProblem<3>(simConfig.prName, &cell_factory);
+            }
+            else
+            {
+                CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 10);
 
-            AbstractCellFactory3DCVode cell_factory(cmname);
-            SolveProblem<3>(simConfig.prName, &cell_factory);
+                AbstractCellFactory3DCVode cell_factory(cmname);
+                SolveProblem<3>(simConfig.prName, &cell_factory);
+            }
         }
+        
     }
 
-
 }
-    
+
+
+template<typename T>
+void ElmahCoreChaste::SolveElMech(T* cell_factory)
+{
+    if(PetscTools::AmMaster())
+        Timer::Reset();
+    {
+        TetrahedralMesh<2, 2> electrics_mesh;
+        QuadraticMesh<2> mechanics_mesh;
+
+        // could (should?) use finer electrics mesh, but keeping electrics simulation time down
+        TrianglesMeshReader<2, 2> reader1("mesh/test/data/annuli/circular_annulus_960_elements");
+        electrics_mesh.ConstructFromMeshReader(reader1);
+
+        TrianglesMeshReader<2, 2> reader2("mesh/test/data/annuli/circular_annulus_960_elements_quad", 2 /*quadratic elements*/);
+        mechanics_mesh.ConstructFromMeshReader(reader2);
+
+        std::vector<unsigned> fixed_nodes;
+        std::vector<c_vector<double, 2> > fixed_node_locations;
+        for (unsigned i = 0; i < mechanics_mesh.GetNumNodes(); i++)
+        {
+            double x = mechanics_mesh.GetNode(i)->rGetLocation()[0];
+            double y = mechanics_mesh.GetNode(i)->rGetLocation()[1];
+
+            if (fabs(x) < 1e-6 && fabs(y + 0.5) < 1e-6) // fixed point (0.0,-0.5) at bottom of mesh
+            {
+                fixed_nodes.push_back(i);
+                c_vector<double, 2> new_position;
+                new_position(0) = x;
+                new_position(1) = y;
+                fixed_node_locations.push_back(new_position);
+            }
+            if (fabs(x) < 1e-6 && fabs(y - 0.5) < 1e-6) // constrained point (0.0,0.5) at top of mesh
+            {
+                fixed_nodes.push_back(i);
+                c_vector<double, 2> new_position;
+                new_position(0) = x;
+                new_position(1) = ElectroMechanicsProblemDefinition<2>::FREE;
+                fixed_node_locations.push_back(new_position);
+            }
+        }
+
+        ElectroMechanicsProblemDefinition<2> problem_defn(mechanics_mesh);
+
+        problem_defn.SetContractionModel(KERCHOFFS2003, 0.1);
+        problem_defn.SetUseDefaultCardiacMaterialLaw(COMPRESSIBLE);
+        //problem_defn.SetZeroDisplacementNodes(fixed_nodes);
+        problem_defn.SetFixedNodes(fixed_nodes, fixed_node_locations);
+        problem_defn.SetMechanicsSolveTimestep(1.0);
+
+        FileFinder finder("heart/test/data/fibre_tests/circular_annulus_960_elements.ortho", RelativeTo::ChasteSourceRoot);
+        problem_defn.SetVariableFibreSheetDirectionsFile(finder, false);
+
+        problem_defn.SetSolveUsingSnes();
+
+        std::vector<BoundaryElement<1, 2>*> boundary_elems;
+        for (TetrahedralMesh<2, 2>::BoundaryElementIterator iter
+             = mechanics_mesh.GetBoundaryElementIteratorBegin();
+             iter != mechanics_mesh.GetBoundaryElementIteratorEnd();
+             ++iter)
+        {
+            ChastePoint<2> centroid = (*iter)->CalculateCentroid();
+            double r = sqrt(centroid[0] * centroid[0] + centroid[1] * centroid[1]);
+
+            if (r < 0.4)
+            {
+                BoundaryElement<1, 2>* p_element = *iter;
+                boundary_elems.push_back(p_element);
+            }
+        }
+
+        problem_defn.SetApplyNormalPressureOnDeformedSurface(boundary_elems, -1.0 /*1 KPa is about 8mmHg*/);
+        problem_defn.SetNumIncrementsForInitialDeformation(3);
+
+        CardiacElectroMechanicsProblem<2, 1> problem(COMPRESSIBLE,
+                                                     MONODOMAIN,
+                                                     &electrics_mesh,
+                                                     &mechanics_mesh,
+                                                     cell_factory,
+                                                     &problem_defn,
+                                                     "Elmah_mech");
+
+        problem.SetOutputDeformationGradientsAndStress(10.0 /*how often (in ms) to write - should be a multiple of mechanics timestep*/);
+
+        if(PetscTools::AmMaster())
+            Timer::PrintAndReset("ElMech Reading and preparations");
+        problem.Solve();
+    }
+    if(PetscTools::AmMaster())
+        Timer::Print("ElMech Solve");
+}
 template<unsigned size, typename T>
 void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_factory)
 {
@@ -87,15 +189,6 @@ void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_facto
             problem.Solve();
             break;
         }
-        // case ProblemName::ELECTRO_MECHA:
-        // {
-        //     CardiacElectroMechanicsProblem<size, 1> problem(cell_factory);
-        //     Timer::Reset();
-        //     problem.Initialise();
-        //     problem.Solve();
-        //     Timer::Print(__FUNCTION__);
-        //     break;
-        // }
         default:
             throw("Unimplemented");
     }
