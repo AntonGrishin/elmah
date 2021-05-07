@@ -63,24 +63,22 @@ void ElmahCoreChaste::StartSimulation(const T& simConfig)
 template<unsigned size, typename T>
 void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_factory)
 {
+    Timer::Reset();
+
     switch(problemName)
     {
         case ProblemName::MONO:
         {
             MonodomainProblem<size> problem(cell_factory);
-            Timer::Reset();
             problem.Initialise();
             problem.Solve();
-            Timer::Print(__FUNCTION__);
             break;
         }
         case ProblemName::BI:
         {
             BidomainProblem<size> problem(cell_factory);
-            Timer::Reset();
             problem.Initialise();
             problem.Solve();
-            Timer::Print(__FUNCTION__);
             break;
         }
         // case ProblemName::ELECTRO_MECHA:
@@ -95,6 +93,7 @@ void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_facto
         default:
             throw("Unimplemented");
     }
+    Timer::Print(__FUNCTION__);
 }
 
 void ElmahCoreChaste::SetOutputParameters(const OutConfig& outConfig)
