@@ -1,2 +1,4 @@
 testElmah.hpp
 testElmah3D.hpp
+testElmah3Dmech.hpp
+testElmah3DPerfHard.hpp
