@@ -13,7 +13,8 @@ public:
     void GenerateMesh(std::string path);
 
 
-    void GenerateMesh(const std::string& path);
+    void GenerateMesh(const std::string& path, cp::media_type AxisType = cp::media_type::NoFibreOrientation);
+    
 
     void GenerateMesh(const MeshConfig& meshConfig);
 

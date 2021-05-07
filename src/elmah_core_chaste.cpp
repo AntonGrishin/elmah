@@ -1,5 +1,6 @@
 #include "elmah_core_chaste.hpp"
 #include "elmah_core_factory.hpp"
+#include "PetscTools.hpp"
 
 ElmahCoreChaste::ElmahCoreChaste()
 {
@@ -12,10 +13,11 @@ ElmahCoreChaste::~ElmahCoreChaste()
 }
 
 
-void ElmahCoreChaste::GenerateMesh(const std::string& path)
+void ElmahCoreChaste::GenerateMesh(const std::string& path, cp::media_type AxisType)
 {
-    HeartConfig::Instance()->SetMeshFileName(path);
+    HeartConfig::Instance()->SetMeshFileName(path, AxisType);
 }
+
 
 void ElmahCoreChaste::GenerateMesh(const MeshConfig& meshConfig) {}
 
@@ -47,12 +49,15 @@ void ElmahCoreChaste::StartSimulation(const T& simConfig)
     {
         if(simConfig.sName == SolverName::BackwardEuler)
         {
-            AbstractCellFactory3D cell_factory(simConfig.CMName);
+            CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 20);
+            AbstractCellFactory3D cell_factory(cmname);
             SolveProblem<3>(simConfig.prName, &cell_factory);
         }
         else
         {
-            AbstractCellFactory3DCVode cell_factory(simConfig.CMName);
+            CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 10);
+
+            AbstractCellFactory3DCVode cell_factory(cmname);
             SolveProblem<3>(simConfig.prName, &cell_factory);
         }
     }
@@ -63,7 +68,8 @@ void ElmahCoreChaste::StartSimulation(const T& simConfig)
 template<unsigned size, typename T>
 void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_factory)
 {
-    Timer::Reset();
+    if(PetscTools::AmMaster())
+        Timer::Reset();
 
     switch(problemName)
     {
@@ -93,7 +99,8 @@ void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_facto
         default:
             throw("Unimplemented");
     }
-    Timer::Print(__FUNCTION__);
+    if(PetscTools::AmMaster())
+        Timer::Print(__FUNCTION__);
 }
 
 void ElmahCoreChaste::SetOutputParameters(const OutConfig& outConfig)

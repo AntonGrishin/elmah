@@ -9,8 +9,9 @@
 class IElmahCore 
 {
 public:
-    virtual ~IElmahCore(){}
-    virtual void GenerateMesh(const std::string& path) = 0;
+    virtual ~IElmahCore() = default;
+
+    virtual void GenerateMesh(const std::string& path, cp::media_type AxisType = cp::media_type::NoFibreOrientation) = 0;
 
     virtual void GenerateMesh(const MeshConfig& meshConfig) = 0;
 
