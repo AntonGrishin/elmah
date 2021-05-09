@@ -35,8 +35,8 @@ public:
 
         OutConfig outConfig = {};
         outConfig.vtkOutput = true;
-        outConfig.outFileName = "10s_el_sim";
-        outConfig.outFolder = "/home/agrishin/elmah";
+        outConfig.outFileName = "result";
+        outConfig.outFolder = "elmah_10sec";
 
 
         elmah->SetOutputParameters(outConfig);
