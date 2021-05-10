@@ -132,7 +132,7 @@ private:
 public:
     AbstractCellFactory3D(const CellMlModel& modelName)
         : AbstractCardiacCellFactory<3>(),
-          mpStimulus(new SimpleStimulus(-5e5, 0.5)),
+        mpStimulus(new SimpleStimulus(-8e5, 0.0)),
           m_name(modelName)
     {
     }

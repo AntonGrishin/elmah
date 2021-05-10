@@ -59,7 +59,9 @@ void ElmahCoreChaste::StartSimulation(const T& simConfig)
         {
             if(simConfig.sName == SolverName::BackwardEuler)
             {
+                printf("BE\n");
                 CellMlModel cmname = static_cast<CellMlModel>(simConfig.CMName + 20);
+                printf("cmname %u\n", cmname);
                 AbstractCellFactory3D cell_factory(cmname);
                 SolveProblem<3>(simConfig.prName, &cell_factory);
             }

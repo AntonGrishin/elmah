@@ -1,4 +1,5 @@
 testElmah.hpp
+testElmah_profiling.hpp
 testElmah3D.hpp
 testElmah3Dmech.hpp
 testElmah3DPerfHard.hpp

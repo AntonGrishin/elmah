@@ -15,8 +15,8 @@ public:
     {
         config.inCellConductivities  = Create_c_vector(1.75, 0.19, 0.19);
         config.CMName = CellMlModel::LuoRudy1991;
-        config.odeTS  = 0.02;
-        config.pdeTS  = 0.1;
+        config.odeTS  = 0.01;
+        config.pdeTS  = 0.01;
         config.printingTS = 0.2;
         config.dim = Dimension::dim3D;
     }

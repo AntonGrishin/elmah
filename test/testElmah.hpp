@@ -105,7 +105,7 @@ public:
         TS_ASSERT_EQUALS(1, 1);
     }
 
-    void testElmah500msPerfMonodomainFE()
+    void testElmah1000msPerfMonodomainFE()
     {
         std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
         elmah->GenerateMesh("mesh/test/data/2D_0_to_1mm_800_elements");
@@ -216,7 +216,7 @@ public:
         TS_ASSERT_EQUALS(1, 1);
     }
 
-    void testElmah500ms500msPerfMonodomainFE()
+    void testElmah500msPerfMonodomainFE()
     {
         std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
         elmah->GenerateMesh("mesh/test/data/2D_0_to_1mm_800_elements");
