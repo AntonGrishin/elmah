@@ -15,8 +15,8 @@ public:
     {
         config.inCellConductivities  = Create_c_vector(1.75, 0.19, 0.19);
         config.CMName = CellMlModel::LuoRudy1991;
-        config.odeTS  = 0.02;
-        config.pdeTS  = 0.1;
+        config.odeTS  = 0.01;
+        config.pdeTS  = 0.01;
         config.printingTS = 0.2;
         config.dim = Dimension::dim3D;
     }
@@ -31,12 +31,12 @@ public:
         commonConfig_3D(config);
         config.prName = ProblemName::MONO;
         config.sName  = SolverName::BackwardEuler;
-        config.duration = 10000.0;
+        config.duration =  1000.0;
 
         OutConfig outConfig = {};
         outConfig.vtkOutput = true;
         outConfig.outFileName = "result";
-        outConfig.outFolder = "elmah_10sec";
+        outConfig.outFolder = "elmah_1sec";
 
 
         elmah->SetOutputParameters(outConfig);

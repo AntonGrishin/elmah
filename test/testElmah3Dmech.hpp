@@ -31,6 +31,19 @@ public:
         TS_ASSERT_EQUALS(1, 1);
     }
 
+    void testElmahELectroMecha100ms2D()
+    {
+        std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
+
+        SimConfig2D config;
+        commonConfig_2D(config);
+        config.duration = 100.0;
+
+        elmah->StartSimulation(&config);
+
+        TS_ASSERT_EQUALS(1, 1);
+    }
+
  };
 
 #endif /*TEST_ELMAH_HPP_*/

@@ -195,7 +195,11 @@ void ElmahCoreChaste::SolveProblem(const ProblemName& problemName, T* cell_facto
             throw("Unimplemented");
     }
     if(PetscTools::AmMaster())
+    {
+        printf("\n\n");
         Timer::Print(__FUNCTION__);
+        printf("\n\n");
+    }
 }
 
 void ElmahCoreChaste::SetOutputParameters(const OutConfig& outConfig)
