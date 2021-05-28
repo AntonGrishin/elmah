@@ -115,5 +115,12 @@ struct OutConfig
 
 struct MeshConfig
 {
-
+    Dimension             dim    = Dimension::dim2D;
+    std::string           electric_mesh;
+    std::string           mecha_mesh;
+    std::string           ortho_mesh;
+    double                step;
+    double                width;
+    double                heigth;
+    double                depth; //for 3D only;
 };

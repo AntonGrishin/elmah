@@ -3,6 +3,9 @@
 #include "elmah_defs.hpp"
 #include "elmah_core.hpp"
 #include "elmah_cell_factory.hpp"
+#include "PlaneStimulusCellFactory.hpp"
+#include "NonlinearElasticityTools.hpp"
+#include "QuadraticMesh.hpp"
 
 class ElmahCoreChaste : public IElmahCore
 {
@@ -48,6 +51,9 @@ private:
     template<typename T>
     void SolveElMech(T* cell_factory);
 
+    template<typename T>
+    void SolveElMech3D(T* cell_factory);
+
     void SetDuration(double duration);
 
     template<unsigned DIM>
@@ -63,4 +69,11 @@ private:
     }
 
     void SetOdePdeAndPrintingTimeSteps(double ode, double pde, double printing);
+
+    TetrahedralMesh<2, 2> m_electrics_mesh;
+    QuadraticMesh<2> m_mechanics_mesh;
+    std::string      m_ortho_mesh;
+    
+    TetrahedralMesh<3, 3> m_electrics_mesh3D;
+    QuadraticMesh<3> m_mechanics_mesh3D;
 };

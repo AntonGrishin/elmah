@@ -130,8 +130,8 @@ private:
     CellMlModel m_name;
 
 public:
-    AbstractCellFactory3D(const CellMlModel& modelName)
-        : AbstractCardiacCellFactory<3>(),
+    AbstractCellFactory3D(const CellMlModel& modelName, boost::shared_ptr<AbstractIvpOdeSolver> solver = boost::shared_ptr<AbstractIvpOdeSolver>(new EulerIvpOdeSolver))
+        : AbstractCardiacCellFactory<3>(solver),
         mpStimulus(new SimpleStimulus(-8e5, 0.0)),
           m_name(modelName)
     {

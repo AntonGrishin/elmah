@@ -7,37 +7,46 @@
 #include "Timer.hpp"
 #include "elmah_core_factory.hpp"
 
-class testElmah3D : public CxxTest::TestSuite
+class testElmah3Dmech : public CxxTest::TestSuite
 {
 public:
 
-    void commonConfig_2D(SimConfig2D& config)
+    void commonConfig_3D(SimConfig3D& config)
     {
         config.prName = ProblemName::ELECTRO_MECHA;
-        config.dim = Dimension::dim2D;
+        config.dim = Dimension::dim3D;
     }
 
+    void commonMeshConfig(MeshConfig& config, OutConfig& outConfig)
+    {
+        config.ortho_mesh    = "5by5by5_fibres.ortho";
+        config.step   = 0.01;
+        config.width  = 0.1;
+        config.depth  = 0.1;
+        config.heigth = 0.1;
 
-    void testElmahELectroMecha50ms2D()
+
+        outConfig.vtkOutput = true;
+        outConfig.outFileName = "result";
+
+        config.dim = Dimension::dim3D;
+    }
+
+    void testElmahELectroMecha50ms3D()
     {
         std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
 
-        SimConfig2D config;
-        commonConfig_2D(config);
-        config.duration = 50.0;
+        OutConfig outConfig = {};
+        MeshConfig meshConfig;
+        commonMeshConfig(meshConfig, outConfig);
+        outConfig.outFolder = "part_of_hearth3D";
+        elmah->SetOutputParameters(outConfig);
 
-        elmah->StartSimulation(&config);
+        elmah->GenerateMesh(meshConfig);
 
-        TS_ASSERT_EQUALS(1, 1);
-    }
-
-    void testElmahELectroMecha100ms2D()
-    {
-        std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
-
-        SimConfig2D config;
-        commonConfig_2D(config);
-        config.duration = 100.0;
+        SimConfig3D config;
+        commonConfig_3D(config);
+        config.duration = 10.0;
 
         elmah->StartSimulation(&config);
 
