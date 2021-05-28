@@ -32,7 +32,7 @@ public:
         config.dim = Dimension::dim3D;
     }
 
-    void testElmahELectroMecha50ms3D()
+    void testElmahELectroMecha500ms3D()
     {
         std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
 
@@ -46,12 +46,34 @@ public:
 
         SimConfig3D config;
         commonConfig_3D(config);
-        config.duration = 10.0;
+        config.duration = 500.0;
 
         elmah->StartSimulation(&config);
 
         TS_ASSERT_EQUALS(1, 1);
     }
+
+        void testElmahELectroMecha1000ms3D()
+    {
+        std::unique_ptr<IElmahCore> elmah(CreateCore(CoreImpl::CHASTE));
+
+        OutConfig outConfig = {};
+        MeshConfig meshConfig;
+        commonMeshConfig(meshConfig, outConfig);
+        outConfig.outFolder = "part_of_hearth3D_1000ms";
+        elmah->SetOutputParameters(outConfig);
+
+        elmah->GenerateMesh(meshConfig);
+
+        SimConfig3D config;
+        commonConfig_3D(config);
+        config.duration = 1000.0;
+
+        elmah->StartSimulation(&config);
+
+        TS_ASSERT_EQUALS(1, 1);
+    }
+
 
  };
 
